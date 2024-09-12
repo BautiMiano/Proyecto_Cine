@@ -155,4 +155,8 @@ tk.Button(root, text="Comenzar Reserva", command=ingresar_datos, font=('Helvetic
 #             "nombre":nombre,
 #             "edad":edad 
 #     }
+
+
+
+
 root.mainloop()
