@@ -93,7 +93,7 @@ def sistema_reserva_cine():
 
     # Confirmación de reserva
     print(f"Felicidades, {nombre}! Ya reservaste tu entrada para '{pelicula}' en la sala {sala}.")
-    print(f"Tu asiento está en la fila {sel_fil}, asiento {sel_col}.") 
+    print(f"Tu asiento está en la fila {sel_fil}, asiento {sel_col}.")      
 
 # Ejecutar el sistema de reserva
 sistema_reserva_cine()
