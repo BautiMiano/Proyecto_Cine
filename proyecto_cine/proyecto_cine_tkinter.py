@@ -221,7 +221,7 @@ def main():
  
     # Cargar y mostrar la imagen del logo
     try:
-        logo_imagen = Image.open("logo2.png")
+        logo_imagen = Image.open("proyecto_cine\img\logo2.png")
         logo_imagen = logo_imagen.resize((250, 250), Image.Resampling.LANCZOS)
         logo_imagen_tk = ImageTk.PhotoImage(logo_imagen)
  
