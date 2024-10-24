@@ -215,6 +215,7 @@ def seleccionar_asiento(fila, col, ventana_asientos):
         else:
             messagebox.showwarning("Límite Alcanzado", f"Solo puede seleccionar {cantidad_entradas} asientos.")
     else:
+        
         messagebox.showwarning("Asiento Ocupado", "El asiento seleccionado ya está ocupado.")
 
 def actualizar_asientos(ventana_asientos):
