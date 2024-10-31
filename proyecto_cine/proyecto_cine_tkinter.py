@@ -7,7 +7,6 @@ from datetime import datetime
 import qrcode
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-import mercadopago
 
 # Función para inicializar el cine
 def inicializar_cine(filas, columnas):
@@ -215,6 +214,7 @@ def seleccionar_asiento(fila, col, ventana_asientos):
         else:
             messagebox.showwarning("Límite Alcanzado", f"Solo puede seleccionar {cantidad_entradas} asientos.")
     else:
+        
         messagebox.showwarning("Asiento Ocupado", "El asiento seleccionado ya está ocupado.")
 
 def actualizar_asientos(ventana_asientos):
@@ -469,29 +469,6 @@ def main():
     tk.Button(root, text="Ayuda", command=mostrar_ayuda, bg='lightgreen', fg='black').pack(pady=10)
 
     root.mainloop()
-
-sdk = mercadopago.SDK("1161969400")
-
-request_options = mercadopago.config.RequestOptions()
-request_options.custom_headers = {
-    'x-idempotency-key': '<SOME_UNIQUE_VALUE>'
-}
-
-payment_data = {
-    "transaction_amount": PRECIO_ENTRADA,
-    "token": "CARD_TOKEN",
-    "description": "Payment description",
-    "payment_method_id": 'visa',
-    "installments": 1,
-    "payer": {
-        "email": 'test_user_401393075@testuser.com'
-    }
-}
-result = sdk.payment().create(payment_data, request_options)
-payment = result["response"]
-
-print(payment)
-
 
 # Ejecutar la función principal
 if __name__ == "__main__":
