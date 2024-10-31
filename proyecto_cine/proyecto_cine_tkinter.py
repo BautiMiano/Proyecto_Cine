@@ -485,7 +485,7 @@ payment_data = {
     "payment_method_id": 'visa',
     "installments": 1,
     "payer": {
-        "email": 'test_user_401393075@testuser.com'
+        "email": 'test_user_40139307@testuser.com'
     }
 }
 result = sdk.payment().create(payment_data, request_options)
