@@ -17,7 +17,7 @@ PRECIO_ENTRADA = 8000
 def inicializar_asientos(filas, columnas):
     return [["O" for _ in range(columnas)] for _ in range(filas)]
 
-def ocupar_asientos_aleatoriamente(matriz, num_asientos_ocupados):
+def ocupar_asientos_aleatoriamente(matriz, num_asientos_ocupados): 
     filas = len(matriz)
     columnas = len(matriz[0])
     asientos_disponibles = [(fila, col) for fila in range(filas) for col in range(columnas)]
