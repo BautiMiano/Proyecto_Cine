@@ -101,6 +101,13 @@
 <body>
     <h1>Pago de Entradas</h1>
     <form action="{{ url_for('confirmar_pago') }}" method="POST">
+        <!-- Campos ocultos para enviar los datos adicionales -->
+        <input type="hidden" name="edad" value="{{ edad }}">
+        <input type="hidden" name="pelicula" value="{{ pelicula }}">
+        <input type="hidden" name="fecha" value="{{ fecha }}">
+        <input type="hidden" name="cantidad_entradas" value="{{ cantidad_entradas }}">
+        <input type="hidden" name="total" value="{{ total }}">
+
         <label for="nombre">Nombre en la Tarjeta</label>
         <input type="text" id="nombre" name="nombre" required>
 

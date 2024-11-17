@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from datetime import datetime
 import random
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+from flask import send_file
+from fpdf import FPDF
+import os
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -103,8 +104,6 @@ def seleccionar_asientos():
 
     return render_template('seleccionar_asientos.html', nombre=nombre, edad=edad, fecha=fecha, pelicula=pelicula, matriz=matriz)
 
-from flask import request, flash, redirect, url_for, render_template
-
 @app.route('/realizar_pago', methods=['POST'])
 def realizar_pago():
     # Recoger datos del formulario
@@ -149,84 +148,90 @@ def realizar_pago():
 
 @app.route('/confirmar_pago', methods=['POST'])
 def confirmar_pago():
-    # Recoger datos enviados por el formulario de pago
-    nombre = request.form['nombre']
-    edad = request.form['edad']
-    pelicula = request.form['pelicula']
-    fecha = request.form['fecha']
-    cantidad_entradas = request.form['cantidad_entradas']
-    total = request.form['total']
-    metodo_pago = request.form['tipo_pago']  # Recoger el método de pago
-
-    # Aquí puedes añadir lógica de procesamiento del pago, como integrar un sistema de pago
-    # Por ahora, asumimos que el pago es exitoso
-
-    flash('¡Pago realizado con éxito!')
-
-    # Redirigir a la página para imprimir la entrada o confirmación
-    return redirect(
-        url_for(
-            'imprimir_entrada',
-            nombre=nombre,
-            edad=edad,
-            pelicula=pelicula,
-            fecha=fecha,
-            cantidad_entradas=cantidad_entradas,
-            total=total
-        )
-    )
-
-@app.route('/imprimir_entrada', methods=['GET', 'POST'])
-def imprimir_entrada():
-    # Si la solicitud es GET, tomamos los parámetros de la URL
-    if request.method == 'GET':
-        nombre = request.args.get('nombre')
-        edad = request.args.get('edad')
-        pelicula = request.args.get('pelicula')
-        fecha = request.args.get('fecha')
-        cantidad_entradas = request.args.get('cantidad_entradas')
-        total = request.args.get('total')
-    # Si la solicitud es POST, tomamos los datos del formulario
-    else:
+    # Verificar qué datos llegan
+    print(request.form)  # Esto te ayudará a depurar el contenido del formulario
+    
+    try:
         nombre = request.form['nombre']
         edad = request.form['edad']
         pelicula = request.form['pelicula']
         fecha = request.form['fecha']
         cantidad_entradas = request.form['cantidad_entradas']
         total = request.form['total']
+        metodo_pago = request.form['tipo_pago']
+    except KeyError as e:
+        flash(f"Error al procesar el formulario: {str(e)}")
+        return redirect(url_for('realizar_pago'))  # Redirigir si hay un error
 
-        # Lógica para generar el PDF si es necesario
-        if nombre and edad and pelicula and fecha and cantidad_entradas and total:
-            # Crear el PDF, si quieres guardar la entrada como PDF
-            pdf = FPDF()
-            pdf.add_page()
-            pdf.set_font("Arial", size=12)
-            pdf.cell(200, 10, txt="Entrada de Cine", ln=True, align='C')
-            pdf.ln(10)
-            pdf.cell(200, 10, txt=f"Nombre: {nombre}", ln=True)
-            pdf.cell(200, 10, txt=f"Edad: {edad}", ln=True)
-            pdf.cell(200, 10, txt=f"Película: {pelicula}", ln=True)
-            pdf.cell(200, 10, txt=f"Fecha: {fecha}", ln=True)
-            pdf.cell(200, 10, txt=f"Cantidad de Entradas: {cantidad_entradas}", ln=True)
-            pdf.cell(200, 10, txt=f"Total: ${total}", ln=True)
+    # Redirigir a la página de impresión de entradas
+    return redirect(url_for('imprimir_entrada', 
+                            nombre=nombre, 
+                            edad=edad, 
+                            pelicula=pelicula, 
+                            fecha=fecha, 
+                            cantidad_entradas=cantidad_entradas, 
+                            total=total))
 
-            # Guardar el archivo PDF
-            pdf_output = f"{nombre}_entrada.pdf"
-            pdf.output(pdf_output)
 
-            # Puedes retornar el archivo PDF como descarga o mostrar un mensaje
-            flash('¡Tu entrada ha sido descargada exitosamente!', 'success')
-            return redirect(url_for('imprimir_entrada', nombre=nombre, edad=edad, pelicula=pelicula, fecha=fecha, cantidad_entradas=cantidad_entradas, total=total))
+@app.route('/imprimir_entrada')
+def imprimir_entrada():
+    # Obtener los parámetros de la URL
+    nombre = request.args.get('nombre')
+    edad = request.args.get('edad')
+    pelicula = request.args.get('pelicula')
+    fecha = request.args.get('fecha')
+    cantidad_entradas = request.args.get('cantidad_entradas')
+    total = request.args.get('total')
 
-    # Renderizar la página de impresión
-    return render_template(
-        'imprimir_entrada.html',
-        nombre=nombre,
-        edad=edad,
-        pelicula=pelicula,
-        fecha=fecha,
-        cantidad_entradas=cantidad_entradas,
-        total=total
-    )
+    # Asegúrate de que los valores estén disponibles
+    if not all([nombre, edad, pelicula, fecha, cantidad_entradas, total]):
+        return "Error: Datos incompletos", 400  # Puedes mostrar un mensaje de error si falta algún parámetro.
+
+    # Renderizar la plantilla de impresión de entrada
+    return render_template('imprimir_entrada.html',
+                           nombre=nombre,
+                           edad=edad,
+                           pelicula=pelicula,
+                           fecha=fecha,
+                           cantidad_entradas=cantidad_entradas,
+                           total=total)
+
+def generate_pdf(nombre, edad, pelicula, fecha, cantidad_entradas, total):
+    pdf = FPDF()
+    pdf.add_page()
+
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt=f"Nombre: {nombre}", ln=True)
+    pdf.cell(200, 10, txt=f"Edad: {edad}", ln=True)
+    pdf.cell(200, 10, txt=f"Pelicula: {pelicula}", ln=True)
+    pdf.cell(200, 10, txt=f"Fecha: {fecha}", ln=True)
+    pdf.cell(200, 10, txt=f"Cantidad de Entradas: {cantidad_entradas}", ln=True)
+    pdf.cell(200, 10, txt=f"Total: ${total}", ln=True)
+
+    # Usar una ruta temporal válida para Windows
+    output_dir = os.path.join(os.getcwd(), 'temp')  # Crear carpeta 'temp' en el directorio actual
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, "entrada.pdf")
+
+    pdf.output(output_path)
+
+    return output_path
+
+@app.route('/descargar_pdf', methods=['POST'])
+def descargar_pdf():
+    nombre = request.form['nombre']
+    edad = request.form['edad']
+    pelicula = request.form['pelicula']
+    fecha = request.form['fecha']
+    cantidad_entradas = request.form['cantidad_entradas']
+    total = request.form['total']
+
+    # Generación del PDF
+    pdf_file = generate_pdf(nombre, edad, pelicula, fecha, cantidad_entradas, total)
+
+    # Enviar el archivo PDF generado al usuario para que lo descargue
+    return send_file(pdf_file, as_attachment=True, download_name="entrada.pdf")
+
+
 if __name__ == '__main__':
     app.run(debug=True)

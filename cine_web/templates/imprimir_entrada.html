@@ -17,8 +17,9 @@
             <p><strong>Cantidad de Entradas:</strong> {{ cantidad_entradas }}</p>
             <p class="total"><strong>Total:</strong> ${{ total }}</p>
         </div>
-        
-        <form action="{{ url_for('imprimir_entrada') }}" method="POST">
+
+        <!-- Aquí estamos usando GET para simplemente visualizar los detalles -->
+        <form action="{{ url_for('descargar_pdf') }}" method="POST">
             <input type="hidden" name="nombre" value="{{ nombre }}">
             <input type="hidden" name="edad" value="{{ edad }}">
             <input type="hidden" name="pelicula" value="{{ pelicula }}">
