@@ -129,7 +129,7 @@ def realizar_pago():
                 pelicula=pelicula,
                 cantidad_entradas=cantidad_entradas
             )
-        )
+        ) 
 
     # Calcular el total a pagar
     total = cantidad_entradas * PRECIO_ENTRADA
