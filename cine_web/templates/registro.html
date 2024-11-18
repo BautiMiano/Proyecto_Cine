@@ -36,7 +36,7 @@
             {% endwith %}
 
             <!-- Formulario de ingreso -->
-            <form action="{{ url_for('ingresar_datos') }}" method="POST">
+            <form action="{{ url_for('guardar_registros') }}" method="POST">
                 <div class="form-group">
                     <label for="nombre">Nombre:</label>
                     <input type="text" id="nombre" name="nombre" placeholder="Ingrese su nombre" required>
@@ -53,16 +53,14 @@
                 </div>
 
                 <div class="form-group">
-                    <button type="submit">Ingresar</button>
+                    <button type="submit">Registrarse</button>
                 </div>
             </form>
-            <a href="{{ url_for('registro') }}">
-                <button>Registrarme</button>
         </section>
     </main>
 
-    <footer class="footer_inicio_sesion">
-        <p class="p_footer">&copy; 2024 Proyecto Cine. Todos los derechos reservados.</p>
+    <footer>
+        <p>&copy; 2024 Proyecto Cine. Todos los derechos reservados.</p>
     </footer>
 </body>
 </html>

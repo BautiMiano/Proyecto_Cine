@@ -1,10 +1,11 @@
-
 from flask import Flask, render_template, request, redirect, url_for, flash
 from datetime import datetime
 import random
 from flask import send_file
 from fpdf import FPDF
 import os
+import json
+from flask import session
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -27,23 +28,80 @@ def ocupar_asientos_aleatoriamente(matriz, num_asientos_ocupados):
     for fila, col in asientos_ocupados:
         matriz[fila][col] = "X"
 
+
+@app.route('/registro')
+def registro():
+    return render_template('registro.html')
+@app.route('/guardar_registrosz', methods=['POST'])
+def guardar_registros():
+    nombre = request.form['nombre']
+    edad = request.form['edad']
+    password=request.form['contraseña']
+
+    if not nombre or not edad or not password:
+        flash('Por favor, complete todos los campos.')
+        return redirect(url_for('registro'))
+    
+    archivo = os.path.join(os.getcwd(), 'usuarios.json')
+    usuario = {
+            "nombre": nombre,
+            "edad": int(edad),
+            "password": password
+        }
+    if os.path.exists(archivo):
+            with open(archivo, 'r') as f:
+                datos = json.load(f)
+    else:
+            datos = []
+
+    datos.append(usuario)
+    with open(archivo, 'w') as f:
+            json.dump(datos, f, indent=4)
+
+    flash('Registro exitoso.')
+    return redirect(url_for('index'))
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
+
+
 @app.route('/ingresar_datos', methods=['POST'])
 def ingresar_datos():
     nombre = request.form['nombre']
-    edad = request.form['edad']
     contraseña = request.form['contraseña']
-    if not nombre or not edad or not contraseña:
+    archivo=os.path.join(os.getcwd(), 'usuarios.json')
+    
+    if not nombre or not contraseña:
         flash('Por favor, complete todos los campos.')
         return redirect(url_for('index'))
     
-    return redirect(url_for('seleccionar_fecha', nombre=nombre, edad=edad))
+    with open(archivo, 'r') as f:
+        datos = json.load(f)
+        usuario_encontrado = None
+    
+    for usuario in datos:
+        if usuario['nombre'] == nombre and usuario['password'] == contraseña:
+            usuario_encontrado = usuario
+            break
+
+    if usuario_encontrado:
+        # Guardar al usuario en la sesión
+        session['usuario'] = usuario_encontrado
+        flash(f'Bienvenido, {nombre}')
+        return redirect(url_for('seleccionar_fecha', nombre=nombre))  # Cambia la ruta según lo que necesites
+    else:
+        flash('No estás registrado o la contraseña es incorrecta.')
+        return redirect(url_for('index'))
 
 @app.route('/seleccionar_fecha')
 def seleccionar_fecha():
+    if 'usuario' not in session:
+        flash('No estás registrado, por favor inicia sesión primero.')
+        return redirect(url_for('index'))
+    
     nombre = request.args.get('nombre')
     edad = request.args.get('edad')
     return render_template('seleccionar_fecha.html', nombre=nombre, edad=edad)

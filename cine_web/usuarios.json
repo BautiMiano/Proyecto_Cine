@@ -1,0 +1,27 @@
+[
+    {
+        "nombre": "Usuario1",
+        "edad": 30,
+        "password": "password1"
+    },
+    {
+        "nombre": "Usuario2",
+        "edad": 25,
+        "password": "password2"
+    },
+    {
+        "nombre": "Bautista",
+        "edad": 12,
+        "password": "123434"
+    },
+    {
+        "nombre": "Bautista",
+        "edad": 12,
+        "password": "2134"
+    },
+    {
+        "nombre": "Bautista",
+        "edad": 12,
+        "password": "234"
+    }
+]
