@@ -10,7 +10,7 @@ app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
 # Variables globales
-peliculas_adultos = ["Venom El Ultimo Baile", "Terrifier 3 El Payaso Siniestro", "Sonrie 2"]
+peliculas_adultos = ["Venom El Ultimo Baile", "Terrifier 2 El Payaso Siniestro", "Sonrie 2"]
 peliculas_todo_publico = ["Robot Salvaje", "La Leyenda Del Dragon"]
 asientos_ocupados = 30                      
 PRECIO_ENTRADA = 8000
