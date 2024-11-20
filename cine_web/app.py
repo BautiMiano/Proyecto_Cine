@@ -31,16 +31,27 @@ def ocupar_asientos_aleatoriamente(matriz, num_asientos_ocupados):
 def index():
     return render_template('index.html')
 
+class ExcepcionDatosUsuario(Exception):
+    def __init__(self, mensaje):
+        self.mensaje = mensaje
+        super().__init__(self.mensaje)
+
 @app.route('/ingresar_datos', methods=['POST'])
 def ingresar_datos():
-    nombre = request.form['nombre']
-    edad = request.form['edad']
-    contraseña = request.form['contraseña']
-    if not nombre or not edad or not contraseña:
-        flash('Por favor, complete todos los campos.')
-        return redirect(url_for('index'))
+    try:
+        nombre = request.form['nombre']
+        edad = request.form['edad']
+        contraseña = request.form['contraseña']
+        
+        # Verificar si faltan datos y lanzar la excepción personalizada
+        if not nombre or not edad or not contraseña:
+            raise ExcepcionDatosUsuario('Por favor, complete todos los campos.')
+        
+        return redirect(url_for('seleccionar_fecha', nombre=nombre, edad=edad))
     
-    return redirect(url_for('seleccionar_fecha', nombre=nombre, edad=edad))
+    except ExcepcionDatosUsuario as e:
+        flash(str(e))  # El mensaje de la excepción se pasa con flash
+        return redirect(url_for('index'))  # Redirigir al inicio si hay un error
 
 # Función para cargar los usuarios desde el archivo JSON
 def cargar_usuarios():
@@ -109,27 +120,39 @@ def seleccionar_horario():
     fecha = request.args.get('fecha')
     return render_template('seleccionar_horario.html', nombre=nombre, edad=edad, fecha=fecha)
 
+# Variables globales
+peliculas_adultos = ["Venom El Ultimo Baile", "Terrifier 3 El Payaso Siniestro", "Sonrie 2"]
+peliculas_todo_publico = ["Robot Salvaje", "La Leyenda Del Dragon"]
+asientos_ocupados = 30                       
+PRECIO_ENTRADA = 8000
+
+# Lista de películas con sus imágenes correspondientes
+peliculas_con_imagenes = [
+    {'nombre': 'Venom El Ultimo Baile', 'imagen': 'static/img/venom.jpg'},
+    {'nombre': 'Terrifier 3 El Payaso Siniestro', 'imagen': 'static/img/terrifier-3.jpg'},
+    {'nombre': 'Sonrie 2', 'imagen': 'static/img/sonrie2.jpg'},
+    {'nombre': 'Robot Salvaje', 'imagen': 'static/img/robot-salvaje.jpg'},
+    {'nombre': 'La Leyenda Del Dragon', 'imagen': 'static/img/la-leyenda-del-dragon.jpg'}
+]
+
 @app.route('/seleccionar_pelicula', methods=['POST'])
 def seleccionar_pelicula():
     nombre = request.form['nombre']
     edad = int(request.form['edad'])
     fecha = request.form['fecha']
     
-    if edad >= 18:
-        peliculas = peliculas_adultos  # Películas para adultos
-    else:
-        peliculas = peliculas_todo_publico
+    # Uso de slicing para dividir la lista según la edad
+    peliculas_adultos = peliculas_con_imagenes[:3]  # Las tres primeras son para adultos (mayores de 18 años)
+    peliculas_todo_publico = peliculas_con_imagenes[3:]  # Las demás son para todo público (menores de 18 años)
     
-    peliculas_con_imagenes = [
-        {'nombre': 'Venom El Ultimo Baile', 'imagen': 'static/img/venom.jpg'},
-        {'nombre': 'Terrifier 3 El Payaso Siniestro', 'imagen': 'static/img/terrifier-3.jpg'},
-        {'nombre': 'Sonrie 2', 'imagen': 'static/img/sonrie2.jpg'},
-        {'nombre': 'Robot Salvaje', 'imagen': 'static/img/robot-salvaje.jpg'},
-        {'nombre': 'La Leyenda Del Dragon', 'imagen': 'static/img/la-leyenda-del-dragon.jpg'}
-    ]
-    peliculas_a_mostrar = list(filter(lambda pelicula: pelicula['nombre'] in peliculas, peliculas_con_imagenes))
+    # Selección de la lista de películas según la edad
+    if edad >= 18:
+        peliculas_seleccionadas = peliculas_adultos  # Películas para adultos
+    else:
+        peliculas_seleccionadas = peliculas_todo_publico  # Películas para todo público
 
-    return render_template('seleccionar_pelicula.html', nombre=nombre, edad=edad, fecha=fecha, peliculas=peliculas_a_mostrar)
+    # Renderizar la página para mostrar las películas seleccionadas
+    return render_template('seleccionar_pelicula.html', nombre=nombre, edad=edad, fecha=fecha, peliculas=peliculas_seleccionadas)
 
 @app.route('/confirmar_pelicula', methods=['POST'])
 def confirmar_pelicula():
