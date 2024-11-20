@@ -30,16 +30,35 @@ def ocupar_asientos_aleatoriamente(matriz, num_asientos_ocupados):
 def index():
     return render_template('index.html')
 
+class ExcepcionDatosUsuario(Exception):
+    def __init__(self, mensaje):
+        super().__init__(mensaje)
+        self.mensaje = mensaje
+
+# Definir una excepción personalizada
+class ExcepcionDatosUsuario(Exception):
+    def __init__(self, mensaje):
+        self.mensaje = mensaje
+        super().__init__(self.mensaje)
+
 @app.route('/ingresar_datos', methods=['POST'])
 def ingresar_datos():
-    nombre = request.form['nombre']
-    edad = request.form['edad']
-    contraseña = request.form['contraseña']
-    if not nombre or not edad or not contraseña:
-        flash('Por favor, complete todos los campos.')
-        return redirect(url_for('index'))
+    try:
+        nombre = request.form['nombre']
+        edad = request.form['edad']
+        contraseña = request.form['contraseña']
+        
+        # Verificar si faltan datos y lanzar la excepción personalizada
+        if not nombre or not edad or not contraseña:
+            raise ExcepcionDatosUsuario('Por favor, complete todos los campos.')
+
+        # Si no hay error, redirigir al usuario a la siguiente página
+        return redirect(url_for('seleccionar_fecha', nombre=nombre, edad=edad))
     
-    return redirect(url_for('seleccionar_fecha', nombre=nombre, edad=edad))
+    except ExcepcionDatosUsuario as e:
+        # Si se captura la excepción, mostrar el mensaje y redirigir
+        flash(str(e))  # El mensaje de la excepción se muestra con flash
+        return redirect(url_for('index'))  # Redirigir al inicio
 
 @app.route('/crear_usuario', methods=['GET', 'POST'])
 def crear_usuario():
