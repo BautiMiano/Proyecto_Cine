@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request, redirect, url_for, flash
 from datetime import datetime
 import random
@@ -42,6 +41,23 @@ def ingresar_datos():
     
     return redirect(url_for('seleccionar_fecha', nombre=nombre, edad=edad))
 
+@app.route('/crear_usuario', methods=['GET', 'POST'])
+def crear_usuario():
+    if request.method == 'POST':
+        # Aquí debes procesar el formulario de creación de usuario
+        nombre = request.form['nombre']
+        edad = request.form['edad']
+        contraseña = request.form['contraseña']
+        mail = request.form['mail']
+        
+        # Aquí puedes guardar los datos del nuevo usuario en el archivo JSON
+        # Llamar la función que tú o tu compañero usarán para guardar el usuario (por ejemplo)
+        
+        flash('¡Usuario creado exitosamente!')
+        return redirect(url_for('index'))  # Redirigir al inicio después de crear el usuario
+
+    return render_template('crear_usuario.html')  # Aquí debes renderizar el formulario para crear un usuario
+
 @app.route('/seleccionar_fecha')
 def seleccionar_fecha():
     nombre = request.args.get('nombre')
@@ -81,8 +97,7 @@ def seleccionar_pelicula():
         {'nombre': 'Robot Salvaje', 'imagen': 'static/img/robot-salvaje.jpg'},
         {'nombre': 'La Leyenda Del Dragon', 'imagen': 'static/img/la-leyenda-del-dragon.jpg'}
     ]
-    peliculas_a_mostrar = list(filter(lambda pelicula: pelicula['nombre'] in peliculas, peliculas_con_imagenes))
-
+    peliculas_a_mostrar = [pelicula for pelicula in peliculas_con_imagenes if pelicula['nombre'] in peliculas]
     return render_template('seleccionar_pelicula.html', nombre=nombre, edad=edad, fecha=fecha, peliculas=peliculas_a_mostrar)
 
 @app.route('/confirmar_pelicula', methods=['POST'])
@@ -251,4 +266,5 @@ def descargar_pdf():
 
 if __name__ == '__main__':
     app.run(debug=True) 
-
+    
+#h
