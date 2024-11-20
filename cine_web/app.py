@@ -4,6 +4,7 @@ import random
 from flask import send_file
 from fpdf import FPDF
 import os
+import json
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -30,15 +31,73 @@ def ocupar_asientos_aleatoriamente(matriz, num_asientos_ocupados):
 def index():
     return render_template('index.html')
 
+class ExcepcionDatosUsuario(Exception):
+    def __init__(self, mensaje):
+        self.mensaje = mensaje
+        super().__init__(self.mensaje)
+
 @app.route('/ingresar_datos', methods=['POST'])
 def ingresar_datos():
-    nombre = request.form['nombre']
-    edad = request.form['edad']
-    if not nombre or not edad:
-        flash('Por favor, complete todos los campos.')
-        return redirect(url_for('index'))
+    try:
+        nombre = request.form['nombre']
+        edad = request.form['edad']
+        contraseña = request.form['contraseña']
+        
+        # Verificar si faltan datos y lanzar la excepción personalizada
+        if not nombre or not edad or not contraseña:
+            raise ExcepcionDatosUsuario('Por favor, complete todos los campos.')
+        
+        return redirect(url_for('seleccionar_fecha', nombre=nombre, edad=edad))
     
-    return redirect(url_for('seleccionar_fecha', nombre=nombre, edad=edad))
+    except ExcepcionDatosUsuario as e:
+        flash(str(e))  # El mensaje de la excepción se pasa con flash
+        return redirect(url_for('index'))  # Redirigir al inicio si hay un error
+
+# Función para cargar los usuarios desde el archivo JSON
+def cargar_usuarios():
+    try:
+        with open('usuarios.json', 'r') as archivo:
+            return json.load(archivo)
+    except FileNotFoundError:
+        return []
+
+# Función para guardar los usuarios en el archivo JSON
+def guardar_usuarios(usuarios):
+    with open('usuarios.json', 'w') as archivo:
+        json.dump(usuarios, archivo, indent=4)
+
+@app.route('/crear_usuario', methods=['GET', 'POST'])
+def crear_usuario():
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        edad = request.form['edad']
+        contraseña = request.form['contraseña']
+        mail = request.form['mail']
+        
+        # Cargar los usuarios existentes
+        usuarios = cargar_usuarios()
+
+        # Verificar si el usuario ya existe
+        for usuario in usuarios:
+            if usuario['mail'] == mail:
+                flash('Usuario existente')
+                return redirect(url_for('crear_usuario'))
+        
+        # Si el usuario no existe, agregarlo a la lista
+        nuevo_usuario = {
+            'nombre': nombre,
+            'edad': edad,
+            'contraseña': contraseña,
+            'mail': mail
+        }
+        usuarios.append(nuevo_usuario)
+
+        # Guardar los nuevos datos de usuario en el archivo JSON
+        guardar_usuarios(usuarios)
+
+        return redirect(url_for('index'))  # Redirigir al inicio después de crear el usuario
+
+    return render_template('crear_usuario.html')
 
 @app.route('/seleccionar_fecha')
 def seleccionar_fecha():
@@ -61,13 +120,39 @@ def seleccionar_horario():
     fecha = request.args.get('fecha')
     return render_template('seleccionar_horario.html', nombre=nombre, edad=edad, fecha=fecha)
 
+# Variables globales
+peliculas_adultos = ["Venom El Ultimo Baile", "Terrifier 3 El Payaso Siniestro", "Sonrie 2"]
+peliculas_todo_publico = ["Robot Salvaje", "La Leyenda Del Dragon"]
+asientos_ocupados = 30                       
+PRECIO_ENTRADA = 8000
+
+# Lista de películas con sus imágenes correspondientes
+peliculas_con_imagenes = [
+    {'nombre': 'Venom El Ultimo Baile', 'imagen': 'static/img/venom.jpg'},
+    {'nombre': 'Terrifier 3 El Payaso Siniestro', 'imagen': 'static/img/terrifier-3.jpg'},
+    {'nombre': 'Sonrie 2', 'imagen': 'static/img/sonrie2.jpg'},
+    {'nombre': 'Robot Salvaje', 'imagen': 'static/img/robot-salvaje.jpg'},
+    {'nombre': 'La Leyenda Del Dragon', 'imagen': 'static/img/la-leyenda-del-dragon.jpg'}
+]
+
 @app.route('/seleccionar_pelicula', methods=['POST'])
 def seleccionar_pelicula():
     nombre = request.form['nombre']
     edad = int(request.form['edad'])
     fecha = request.form['fecha']
-    peliculas = peliculas_adultos + peliculas_todo_publico if edad >= 18 else peliculas_todo_publico
-    return render_template('seleccionar_pelicula.html', nombre=nombre, edad=edad, fecha=fecha, peliculas=peliculas)
+    
+    # Uso de slicing para dividir la lista según la edad
+    peliculas_adultos = peliculas_con_imagenes[:3]  # Las tres primeras son para adultos (mayores de 18 años)
+    peliculas_todo_publico = peliculas_con_imagenes[3:]  # Las demás son para todo público (menores de 18 años)
+    
+    # Selección de la lista de películas según la edad
+    if edad >= 18:
+        peliculas_seleccionadas = peliculas_adultos  # Películas para adultos
+    else:
+        peliculas_seleccionadas = peliculas_todo_publico  # Películas para todo público
+
+    # Renderizar la página para mostrar las películas seleccionadas
+    return render_template('seleccionar_pelicula.html', nombre=nombre, edad=edad, fecha=fecha, peliculas=peliculas_seleccionadas)
 
 @app.route('/confirmar_pelicula', methods=['POST'])
 def confirmar_pelicula():
@@ -117,19 +202,13 @@ def realizar_pago():
     asientos_seleccionados = request.form.get('asientos_seleccionados', '')
     asientos_lista = asientos_seleccionados.split(',') if asientos_seleccionados else []
 
-    # Validar cantidad de asientos seleccionados
-    if len(asientos_lista) != cantidad_entradas:
-        flash(f"Debes seleccionar exactamente {cantidad_entradas} asientos.")
-        return redirect(
-            url_for(
-                'seleccionar_asientos',
-                nombre=nombre,
-                edad=edad,
-                fecha=fecha,
-                pelicula=pelicula,
-                cantidad_entradas=cantidad_entradas
-            )
-        ) 
+    try:
+        # Usamos raise para lanzar una excepción si la cantidad no coincide
+        if len(asientos_lista) != cantidad_entradas:
+            raise ValueError(f"Debes seleccionar exactamente {cantidad_entradas} asientos. Actualmente seleccionaste {len(asientos_lista)}.")
+    except ValueError as e:
+        flash(f"Error: {str(e)}")  # El mensaje del ValueError se captura aquí
+        return redirect(url_for('seleccionar_asientos', nombre=nombre, edad=edad, fecha=fecha, pelicula=pelicula, cantidad_entradas=cantidad_entradas))
 
     # Calcular el total a pagar
     total = cantidad_entradas * PRECIO_ENTRADA
@@ -227,11 +306,11 @@ def descargar_pdf():
     total = request.form['total']
 
     # Generación del PDF
-    pdf_file = generate_pdf(nombre, edad, pelicula, fecha, cantidad_entradas, total)
+    pdf_e = generate_pdf(nombre, edad, pelicula, fecha, cantidad_entradas, total)
 
     # Enviar el archivo PDF generado al usuario para que lo descargue
     return send_file(pdf_file, as_attachment=True, download_name="entrada.pdf")
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True) 

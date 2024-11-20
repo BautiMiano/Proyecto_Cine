@@ -1,3 +1,4 @@
+
 /* General */
 * {
     margin: 0;
@@ -29,12 +30,6 @@ h2 {
     margin: 1.5rem 0;
 }
 
-p {
-    text-align: center;
-    margin-bottom: 1rem;
-    color: #a1a1aa;
-}
-
 /* Encabezado y navegación */
 header {
     background-color: #2c2c2e;
@@ -57,6 +52,14 @@ nav a {
     color: #f2f2f7;
     text-decoration: none;
     font-weight: bold;
+}
+.footer_inicio_sesion{
+    position: fixed;
+}
+.p_footer{
+    text-align: center;
+    color: #a1a1aa;
+    padding: 1%;
 }
 
 /* Sección de películas */
@@ -105,9 +108,13 @@ label {
     color: #f2f2f7;
 }
 
+
+
 input[type="text"],
 input[type="number"],
 input[type="date"],
+input[type="email"],
+input[type="password"],
 select {
     width: 100%;
     padding: 0.5rem;
