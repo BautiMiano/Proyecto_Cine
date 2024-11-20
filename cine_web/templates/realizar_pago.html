@@ -70,19 +70,12 @@
             background-color: #9e0000;
         }
 
-        .error {
-            color: #e74c3c;
-            font-size: 0.9em;
-            margin-top: -10px;
-            margin-bottom: 10px;
-        }
-
         .payment-option {
             margin-bottom: 15px;
         }
 
         .qr-code {
-            display: none; 
+            display: none;
             margin-top: 10px;
             padding: 10px;
             border: 1px dashed #ecf0f1;
@@ -107,14 +100,20 @@
 </head>
 <body>
     <h1>Pago de Entradas</h1>
-    <form id="formPago" action="{{ url_for('confirmar_pago') }}" method="POST" onsubmit="return validarFormulario()">
-        
-        <label for="nombre">Nombre en la Tarjeta</label>    
+    <form action="{{ url_for('confirmar_pago') }}" method="POST">
+        <!-- Campos ocultos para enviar los datos adicionales -->
+        <input type="hidden" name="edad" value="{{ edad }}">
+        <input type="hidden" name="pelicula" value="{{ pelicula }}">
+        <input type="hidden" name="fecha" value="{{ fecha }}">
+        <input type="hidden" name="cantidad_entradas" value="{{ cantidad_entradas }}">
+        <input type="hidden" name="total" value="{{ total }}">
+
+        <label for="nombre">Nombre en la Tarjeta</label>
         <input type="text" id="nombre" name="nombre" required>
 
         <div class="payment-option">
             <label>Tipo de Pago:</label>
-            <select id="tipo_pago" name="tipo_pago" onchange="mostrarInputs()">
+            <select id="tipo_pago" name="tipo_pago" onchange="mostrarOpcionesPago()" required>
                 <option value="" disabled selected>Seleccione una opción</option>
                 <option value="debito">Débito</option>
                 <option value="credito">Crédito</option>
@@ -122,6 +121,7 @@
             </select>
         </div>
 
+        <!-- Mostrar inputs de tarjeta solo si es necesario -->
         <div id="inputsTarjeta" style="display: none;">
             <label for="numero_tarjeta">Número de Tarjeta</label>
             <input type="text" id="numero_tarjeta" name="numero_tarjeta" maxlength="19" placeholder="1234 5678 9123 4567" required>
@@ -138,6 +138,7 @@
             </div>
         </div>
 
+        <!-- Mostrar QR solo si es mercado pago -->
         <div id="qrCode" class="qr-code">
             <p>Escanea el QR para completar el pago:</p>
             <img src="static/img/qr_pago.png" alt="QR Code" width="150">
@@ -145,88 +146,32 @@
         </div>
 
         <div class="entradas-display">
-            Entradas seleccionadas: <span id="cantidad_entradas">1</span>
+            Entradas seleccionadas: {{ cantidad_entradas }}
         </div>
 
-        <div class="total" id="total">Precio Total: $<span id="precioTotal">0</span></div>
+        <div class="total-price">
+            Precio Total: ${{ total }}
+        </div>
 
         <button type="submit">Pagar</button>
-        <div class="error" id="errorNombre"></div>
-        <div class="error" id="errorTarjeta"></div>
-        <div class="error" id="errorFecha"></div>
-        <div class="error" id="errorCVV"></div>
     </form>
 
     <script>
-        const precioPorEntrada = 8000; 
+        function mostrarOpcionesPago() {
+            var tipoPago = document.getElementById("tipo_pago").value;
+            var inputsTarjeta = document.getElementById("inputsTarjeta");
+            var qrCode = document.getElementById("qrCode");
 
-        function mostrarInputs() {
-            const tipoPago = document.getElementById('tipo_pago').value;
-            const inputsTarjeta = document.getElementById('inputsTarjeta');
-            const qrCode = document.getElementById('qrCode');
-
-            if (tipoPago === 'debito' || tipoPago === 'credito') {
-                inputsTarjeta.style.display = 'block';
-                qrCode.style.display = 'none';
-            } else if (tipoPago === 'mercado_pago') {
-                inputsTarjeta.style.display = 'none';
-                qrCode.style.display = 'block';
+            if (tipoPago == "debito" || tipoPago == "credito") {
+                inputsTarjeta.style.display = "block";
+                qrCode.style.display = "none";
+            } else if (tipoPago == "mercado_pago") {
+                inputsTarjeta.style.display = "none";
+                qrCode.style.display = "block";
             } else {
-                inputsTarjeta.style.display = 'none';
-                qrCode.style.display = 'none';
+                inputsTarjeta.style.display = "none";
+                qrCode.style.display = "none";
             }
-        }
-
-        function calcularTotal() {
-            const numeroEntradas = document.getElementById('entradas').value;
-            const precioTotal = precioPorEntrada * numeroEntradas;
-            document.getElementById('precioTotal').textContent = precioTotal.toFixed(2);
-            document.getElementById('numeroEntradas').textContent = numeroEntradas; // Actualiza el número de entradas
-        }
-
-        function validarFormulario() {
-            // Clear previous errors
-            document.getElementById('errorNombre').textContent = '';
-            document.getElementById('errorTarjeta').textContent = '';
-            document.getElementById('errorFecha').textContent = '';
-            document.getElementById('errorCVV').textContent = '';
-
-            // Name validation
-            const nombre = document.getElementById('nombre').value;
-            if (nombre.trim() === '') {
-                document.getElementById('errorNombre').textContent = 'El nombre no puede estar vacío.';
-                return false;
-            }
-
-            // Get selected payment type
-            const tipoPago = document.getElementById('tipo_pago').value;
-
-            // Card number validation if debit or credit is selected
-            if (tipoPago === 'debito' || tipoPago === 'credito') {
-                const numeroTarjeta = document.getElementById('numero_tarjeta').value;
-                const regexTarjeta = /^[0-9]{4}\s[0-9]{4}\s[0-9]{4}\s[0-9]{4}$/;
-                if (!regexTarjeta.test(numeroTarjeta)) {
-                    document.getElementById('errorTarjeta').textContent = 'Número de tarjeta inválido (formato 1234 5678 9123 4567).';
-                    return false;
-                }
-
-                // Expiration date validation
-                const fechaExpiracion = document.getElementById('fecha_expiracion').value;
-                const regexFecha = /^(0[1-9]|1[0-2])\/([0-9]{2})$/;
-                if (!regexFecha.test(fechaExpiracion)) {
-                    document.getElementById('errorFecha').textContent = 'Fecha de expiración inválida (formato MM/YY).';
-                    return false;
-                }
-
-                // CVV validation
-                const cvv = document.getElementById('cvv').value;
-                if (cvv.length !== 3) {
-                    document.getElementById('errorCVV').textContent = 'CVV debe tener 3 dígitos.';
-                    return false;
-                }
-            }
-
-            return true; // If all validations pass
         }
     </script>
 </body>

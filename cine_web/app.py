@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template, request, redirect, url_for, flash
 from datetime import datetime
 import random
@@ -40,6 +41,23 @@ def ingresar_datos():
         return redirect(url_for('index'))
     
     return redirect(url_for('seleccionar_fecha', nombre=nombre, edad=edad))
+
+@app.route('/crear_usuario', methods=['GET', 'POST'])
+def crear_usuario():
+    if request.method == 'POST':
+        # Aquí debes procesar el formulario de creación de usuario
+        nombre = request.form['nombre']
+        edad = request.form['edad']
+        contraseña = request.form['contraseña']
+        mail = request.form['mail']
+        
+        # Aquí puedes guardar los datos del nuevo usuario en el archivo JSON
+        # Llamar la función que tú o tu compañero usarán para guardar el usuario (por ejemplo)
+        
+        flash('¡Usuario creado exitosamente!')
+        return redirect(url_for('index'))  # Redirigir al inicio después de crear el usuario
+
+    return render_template('crear_usuario.html')  # Aquí debes renderizar el formulario para crear un usuario
 
 @app.route('/seleccionar_fecha')
 def seleccionar_fecha():

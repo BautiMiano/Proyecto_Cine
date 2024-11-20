@@ -7,20 +7,24 @@
     <link rel="stylesheet" href="static\style.css">
 </head>
 <body><br><br>
-    <h1>Selecciona la Película</h1>
     <form action="{{ url_for('confirmar_pelicula') }}" method="POST">
-        <label for="pelicula">Película:</label>
-        <select id="pelicula" name="pelicula" required>
+        <h2>Seleccione una película:</h2>
+        <div class="peliculas-lista">
             {% for pelicula in peliculas %}
-            <option value="{{ pelicula }}">{{ pelicula }}</option>
+                <div class="pelicula">
+                    <label>
+                        <input type="radio" name="pelicula" value="{{ pelicula['nombre'] }}" required>
+                        <img src="{{ pelicula['imagen'] }}" alt="{{ pelicula['nombre'] }}">
+                        <h3>{{ pelicula['nombre'] }}</h3>
+                    </label>
+                </div>
             {% endfor %}
-        </select><br><br>
-        
+        </div>
         <input type="hidden" name="nombre" value="{{ nombre }}">
         <input type="hidden" name="edad" value="{{ edad }}">
         <input type="hidden" name="fecha" value="{{ fecha }}">
-        
-        <button type="submit">Confirmar Película</button>
-    </form>
+        <button type="submit">Confirmar</button>
+
 </body>
 </html>
+
