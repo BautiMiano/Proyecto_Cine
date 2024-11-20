@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proyecto Cine | Inicio</title>
+    <title>Crear Usuario</title>
     <link rel="stylesheet" href="static/style.css">
 </head>
 <body>
@@ -12,14 +12,15 @@
             <img src="static/img/logo2.png" alt="Logo de Proyecto Cine" class="logo">
             <nav>
                 <ul class="menu">
+                    <li><a href="/">Inicio</a></li>
                     <li><a href="#login">Iniciar Sesión</a></li>
                 </ul>
             </nav>
         </div>
     </header>
-    <section id="login">
-        <h2>Ingreso de Usuario</h2>
-        <form action="{{ url_for('ingresar_datos') }}" method="POST">
+    <section id="crear-usuario">
+        <h2>Crear Usuario</h2>
+        <form action="{{ url_for('crear_usuario') }}" method="POST">
             <label for="nombre">Nombre:</label>
             <input type="text" id="nombre" name="nombre" required><br><br>
 
@@ -29,18 +30,14 @@
             <label for="contraseña">Contraseña:</label>
             <input type="password" id="contraseña" name="contraseña" required><br><br>
 
-            <button type="submit">Ingresar</button>
+            <label for="mail">Correo electrónico:</label>
+            <input type="email" id="mail" name="mail" required><br><br>
+
+            <button type="submit">Crear Usuario</button>
         </form>
-
-        <!-- Mensaje para crear un nuevo usuario -->
-        <div style="text-align: center; margin-top: 20px;">
-            <p>¿No tienes un usuario? <a href="{{ url_for('crear_usuario') }}">Presiona aquí para crearlo.</a></p>
-        </div>
-    </section><br><br>
-
+    </section>
     <footer class="footer_inicio_sesion">
         <p class="p_footer">&copy; 2024 Proyecto Cine. Todos los derechos reservados.</p>
     </footer>
-
 </body>
 </html>
