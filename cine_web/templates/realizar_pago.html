@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -146,10 +148,12 @@
         </div>
 
         <div class="entradas-display">
-            Entradas seleccionadas: <span id="cantidad_entradas">1</span>
+            Entradas seleccionadas: {{ cantidad_entradas }}
         </div>
 
-        <div class="total" id="total">Precio Total: $<span id="precioTotal">0</span></div>
+        <div class="total-price">
+            Precio Total: ${{ total }}
+        </div>
 
         <button type="submit">Pagar</button>
     </form>

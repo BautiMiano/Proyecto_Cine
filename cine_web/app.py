@@ -83,8 +83,6 @@ def seleccionar_pelicula():
     ]
     peliculas_a_mostrar = list(filter(lambda pelicula: pelicula['nombre'] in peliculas, peliculas_con_imagenes))
 
-
-
     return render_template('seleccionar_pelicula.html', nombre=nombre, edad=edad, fecha=fecha, peliculas=peliculas_a_mostrar)
 
 @app.route('/confirmar_pelicula', methods=['POST'])
@@ -253,4 +251,3 @@ def descargar_pdf():
 
 if __name__ == '__main__':
     app.run(debug=True) 
-
