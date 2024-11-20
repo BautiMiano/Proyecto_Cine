@@ -182,19 +182,13 @@ def realizar_pago():
     asientos_seleccionados = request.form.get('asientos_seleccionados', '')
     asientos_lista = asientos_seleccionados.split(',') if asientos_seleccionados else []
 
-    # Validar cantidad de asientos seleccionados
-    if len(asientos_lista) != cantidad_entradas:
-        flash(f"Debes seleccionar exactamente {cantidad_entradas} asientos.")
-        return redirect(
-            url_for(
-                'seleccionar_asientos',
-                nombre=nombre,
-                edad=edad,
-                fecha=fecha,
-                pelicula=pelicula,
-                cantidad_entradas=cantidad_entradas
-            )
-        ) 
+    try:
+        # Usamos raise para lanzar una excepción si la cantidad no coincide
+        if len(asientos_lista) != cantidad_entradas:
+            raise ValueError(f"Debes seleccionar exactamente {cantidad_entradas} asientos. Actualmente seleccionaste {len(asientos_lista)}.")
+    except ValueError as e:
+        flash(f"Error: {str(e)}")  # El mensaje del ValueError se captura aquí
+        return redirect(url_for('seleccionar_asientos', nombre=nombre, edad=edad, fecha=fecha, pelicula=pelicula, cantidad_entradas=cantidad_entradas))
 
     # Calcular el total a pagar
     total = cantidad_entradas * PRECIO_ENTRADA
