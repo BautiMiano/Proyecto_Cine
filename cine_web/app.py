@@ -5,6 +5,7 @@ import random
 from flask import send_file
 from fpdf import FPDF
 import os
+import json
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -42,22 +43,51 @@ def ingresar_datos():
     
     return redirect(url_for('seleccionar_fecha', nombre=nombre, edad=edad))
 
+# Función para cargar los usuarios desde el archivo JSON
+def cargar_usuarios():
+    try:
+        with open('usuarios.json', 'r') as archivo:
+            return json.load(archivo)
+    except FileNotFoundError:
+        return []
+
+# Función para guardar los usuarios en el archivo JSON
+def guardar_usuarios(usuarios):
+    with open('usuarios.json', 'w') as archivo:
+        json.dump(usuarios, archivo, indent=4)
+
 @app.route('/crear_usuario', methods=['GET', 'POST'])
 def crear_usuario():
     if request.method == 'POST':
-        # Aquí debes procesar el formulario de creación de usuario
         nombre = request.form['nombre']
         edad = request.form['edad']
         contraseña = request.form['contraseña']
         mail = request.form['mail']
         
-        # Aquí puedes guardar los datos del nuevo usuario en el archivo JSON
-        # Llamar la función que tú o tu compañero usarán para guardar el usuario (por ejemplo)
+        # Cargar los usuarios existentes
+        usuarios = cargar_usuarios()
+
+        # Verificar si el usuario ya existe
+        for usuario in usuarios:
+            if usuario['mail'] == mail:
+                flash('Usuario existente')
+                return redirect(url_for('crear_usuario'))
         
-        flash('¡Usuario creado exitosamente!')
+        # Si el usuario no existe, agregarlo a la lista
+        nuevo_usuario = {
+            'nombre': nombre,
+            'edad': edad,
+            'contraseña': contraseña,
+            'mail': mail
+        }
+        usuarios.append(nuevo_usuario)
+
+        # Guardar los nuevos datos de usuario en el archivo JSON
+        guardar_usuarios(usuarios)
+
         return redirect(url_for('index'))  # Redirigir al inicio después de crear el usuario
 
-    return render_template('crear_usuario.html')  # Aquí debes renderizar el formulario para crear un usuario
+    return render_template('crear_usuario.html')
 
 @app.route('/seleccionar_fecha')
 def seleccionar_fecha():

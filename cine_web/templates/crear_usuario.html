@@ -20,6 +20,18 @@
     </header>
     <section id="crear-usuario">
         <h2>Crear Usuario</h2>
+        
+        <!-- Mostrar los mensajes de flash aquí -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="flash-messages">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
         <form action="{{ url_for('crear_usuario') }}" method="POST">
             <label for="nombre">Nombre:</label>
             <input type="text" id="nombre" name="nombre" required><br><br>
@@ -39,5 +51,23 @@
     <footer class="footer_inicio_sesion">
         <p class="p_footer">&copy; 2024 Proyecto Cine. Todos los derechos reservados.</p>
     </footer>
+    <script>
+        // Esperar hasta que el DOM esté completamente cargado
+        document.addEventListener('DOMContentLoaded', function () {
+            // Seleccionar el contenedor de los mensajes flash
+            const flashMessages = document.querySelectorAll('.flash-messages li');
+            
+            // Verificar si existen mensajes
+            if (flashMessages.length > 0) {
+                // Esperar 3 segundos y luego ocultar el mensaje
+                setTimeout(function () {
+                    flashMessages.forEach(function (message) {
+                        message.style.display = 'none'; // Ocultar el mensaje
+                    });
+                }, 3000); // Tiempo en milisegundos (3 segundos)
+            }
+        });
+    </script>
+    
 </body>
 </html>
