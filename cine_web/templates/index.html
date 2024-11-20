@@ -17,6 +17,20 @@
             </nav>
         </div>
     </header>
+
+    <!-- Mostrar mensajes de error -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="flash-messages">
+                <ul>
+                    {% for message in messages %}
+                        <li style="color: red;">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    {% endwith %}
+
     <section id="login">
         <h2>Ingreso de Usuario</h2>
         <form action="{{ url_for('ingresar_datos') }}" method="POST">
