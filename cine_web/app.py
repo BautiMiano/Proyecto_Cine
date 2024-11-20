@@ -127,7 +127,8 @@ def seleccionar_pelicula():
         {'nombre': 'Robot Salvaje', 'imagen': 'static/img/robot-salvaje.jpg'},
         {'nombre': 'La Leyenda Del Dragon', 'imagen': 'static/img/la-leyenda-del-dragon.jpg'}
     ]
-    peliculas_a_mostrar = [pelicula for pelicula in peliculas_con_imagenes if pelicula['nombre'] in peliculas]
+    peliculas_a_mostrar = list(filter(lambda pelicula: pelicula['nombre'] in peliculas, peliculas_con_imagenes))
+
     return render_template('seleccionar_pelicula.html', nombre=nombre, edad=edad, fecha=fecha, peliculas=peliculas_a_mostrar)
 
 @app.route('/confirmar_pelicula', methods=['POST'])
@@ -178,19 +179,13 @@ def realizar_pago():
     asientos_seleccionados = request.form.get('asientos_seleccionados', '')
     asientos_lista = asientos_seleccionados.split(',') if asientos_seleccionados else []
 
-    # Validar cantidad de asientos seleccionados
-    if len(asientos_lista) != cantidad_entradas:
-        flash(f"Debes seleccionar exactamente {cantidad_entradas} asientos.")
-        return redirect(
-            url_for(
-                'seleccionar_asientos',
-                nombre=nombre,
-                edad=edad,
-                fecha=fecha,
-                pelicula=pelicula,
-                cantidad_entradas=cantidad_entradas
-            )
-        ) 
+    try:
+        # Usamos raise para lanzar una excepción si la cantidad no coincide
+        if len(asientos_lista) != cantidad_entradas:
+            raise ValueError(f"Debes seleccionar exactamente {cantidad_entradas} asientos. Actualmente seleccionaste {len(asientos_lista)}.")
+    except ValueError as e:
+        flash(f"Error: {str(e)}")  # El mensaje del ValueError se captura aquí
+        return redirect(url_for('seleccionar_asientos', nombre=nombre, edad=edad, fecha=fecha, pelicula=pelicula, cantidad_entradas=cantidad_entradas))
 
     # Calcular el total a pagar
     total = cantidad_entradas * PRECIO_ENTRADA
@@ -288,7 +283,7 @@ def descargar_pdf():
     total = request.form['total']
 
     # Generación del PDF
-    pdf_file = generate_pdf(nombre, edad, pelicula, fecha, cantidad_entradas, total)
+    pdf_e = generate_pdf(nombre, edad, pelicula, fecha, cantidad_entradas, total)
 
     # Enviar el archivo PDF generado al usuario para que lo descargue
     return send_file(pdf_file, as_attachment=True, download_name="entrada.pdf")
