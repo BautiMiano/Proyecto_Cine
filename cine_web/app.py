@@ -10,7 +10,7 @@ app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
 # Variables globales
-peliculas_adultos = ["Venom El Ultimo Baile", "Terrifier 2 El Payaso Siniestro", "Sonrie 2"]
+peliculas_adultos = ["Venom El Ultimo Baile", "Terrifier 3 El Payaso Siniestro", "Sonrie 2"]
 peliculas_todo_publico = ["Robot Salvaje", "La Leyenda Del Dragon"]
 asientos_ocupados = 30                      
 PRECIO_ENTRADA = 8000
@@ -35,7 +35,8 @@ def index():
 def ingresar_datos():
     nombre = request.form['nombre']
     edad = request.form['edad']
-    if not nombre or not edad:
+    contraseña = request.form['contraseña']
+    if not nombre or not edad or not contraseña:
         flash('Por favor, complete todos los campos.')
         return redirect(url_for('index'))
     
@@ -67,8 +68,24 @@ def seleccionar_pelicula():
     nombre = request.form['nombre']
     edad = int(request.form['edad'])
     fecha = request.form['fecha']
-    peliculas = peliculas_adultos + peliculas_todo_publico if edad >= 18 else peliculas_todo_publico
-    return render_template('seleccionar_pelicula.html', nombre=nombre, edad=edad, fecha=fecha, peliculas=peliculas)
+    
+    if edad >= 18:
+        peliculas = peliculas_adultos  # Películas para adultos
+    else:
+        peliculas = peliculas_todo_publico
+    
+    peliculas_con_imagenes = [
+        {'nombre': 'Venom El Ultimo Baile', 'imagen': 'static/img/venom.jpg'},
+        {'nombre': 'Terrifier 3 El Payaso Siniestro', 'imagen': 'static/img/terrifier-3.jpg'},
+        {'nombre': 'Sonrie 2', 'imagen': 'static/img/sonrie2.jpg'},
+        {'nombre': 'Robot Salvaje', 'imagen': 'static/img/robot-salvaje.jpg'},
+        {'nombre': 'La Leyenda Del Dragon', 'imagen': 'static/img/la-leyenda-del-dragon.jpg'}
+    ]
+    peliculas_a_mostrar = list(filter(lambda pelicula: pelicula['nombre'] in peliculas, peliculas_con_imagenes))
+
+
+
+    return render_template('seleccionar_pelicula.html', nombre=nombre, edad=edad, fecha=fecha, peliculas=peliculas_a_mostrar)
 
 @app.route('/confirmar_pelicula', methods=['POST'])
 def confirmar_pelicula():
@@ -236,3 +253,4 @@ def descargar_pdf():
 
 if __name__ == '__main__':
     app.run(debug=True) 
+
