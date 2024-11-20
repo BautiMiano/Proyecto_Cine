@@ -104,11 +104,23 @@ def seleccionar_pelicula():
     edad = int(request.form['edad'])
     fecha = request.form['fecha']
     
+    # Combinamos todas las películas en una sola lista
+    peliculas = [
+        "Venom El Ultimo Baile", "Terrifier 3 El Payaso Siniestro", "Sonrie 2",  # Películas para adultos
+        "Robot Salvaje", "La Leyenda Del Dragon"                               # Películas para todo público
+    ]
+
+    # Usamos slicing para dividir la lista según la edad
+    peliculas_adultos = peliculas[:3]  # Las primeras 3 películas son para adultos
+    peliculas_todo_publico = peliculas[3:]  # El resto son para todo público
+
+    # Seleccionar películas dependiendo de la edad
     if edad >= 18:
-        peliculas = peliculas_adultos  # Películas para adultos
+        peliculas_seleccionadas = peliculas_adultos
     else:
-        peliculas = peliculas_todo_publico
+        peliculas_seleccionadas = peliculas_todo_publico
     
+    # Lista de películas con sus imágenes
     peliculas_con_imagenes = [
         {'nombre': 'Venom El Ultimo Baile', 'imagen': 'static/img/venom.jpg'},
         {'nombre': 'Terrifier 3 El Payaso Siniestro', 'imagen': 'static/img/terrifier-3.jpg'},
@@ -116,8 +128,12 @@ def seleccionar_pelicula():
         {'nombre': 'Robot Salvaje', 'imagen': 'static/img/robot-salvaje.jpg'},
         {'nombre': 'La Leyenda Del Dragon', 'imagen': 'static/img/la-leyenda-del-dragon.jpg'}
     ]
-    peliculas_a_mostrar = [pelicula for pelicula in peliculas_con_imagenes if pelicula['nombre'] in peliculas]
+    
+    # Filtrar las películas que corresponden según la edad
+    peliculas_a_mostrar = [pelicula for pelicula in peliculas_con_imagenes if pelicula['nombre'] in peliculas_seleccionadas]
+    
     return render_template('seleccionar_pelicula.html', nombre=nombre, edad=edad, fecha=fecha, peliculas=peliculas_a_mostrar)
+
 
 @app.route('/confirmar_pelicula', methods=['POST'])
 def confirmar_pelicula():
@@ -156,7 +172,6 @@ def seleccionar_asientos():
 
 @app.route('/realizar_pago', methods=['POST'])
 def realizar_pago():
-    # Recoger datos del formulario
     nombre = request.form['nombre']
     edad = request.form['edad']
     fecha = request.form['fecha']
