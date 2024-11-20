@@ -184,7 +184,7 @@
                         <div class="asiento {% if matriz[fila][columna] == 'X' %}ocupado{% else %}libre{% endif %}" 
                              data-asiento="{{ fila }}-{{ columna }}" 
                              onclick="seleccionarAsiento(this)">
-                             {{ letras[fila] }}{{ columna + 1 }}
+                             {{ fila + 1 }}{{ letras[columna] }}
                         </div>
                     {% endfor %}
                     
