@@ -1,15 +1,25 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
+from werkzeug.security import check_password_hash
+import json
 from datetime import datetime
 import random
 from flask import send_file
 from fpdf import FPDF
 import os
+import re
+import pytest
+
+# ESTO ES PARA INSTALAR LAS LIBRERIAS PARA CORRER EL PROGRAMA!!!!
+# pip install Flask
+# pip install werkzeug
+# pip install fpdf
+# pip install Flask werkzeug fpdf
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
 # Variables globales
-peliculas_adultos = ["Venom El Ultimo Baile", "Terrifier 3 El Payaso Siniestro", "Sonrie 2"]
+peliculas_adultos = ["Venom El Ultimo Baile", "Terrifier 3 El Payaso Siniestro", "Sonrie 2", "Robot Salvaje", "La Leyenda Del Dragon" ]
 peliculas_todo_publico = ["Robot Salvaje", "La Leyenda Del Dragon"]
 asientos_ocupados = 30                      
 PRECIO_ENTRADA = 8000
@@ -26,33 +36,158 @@ def ocupar_asientos_aleatoriamente(matriz, num_asientos_ocupados):
     for fila, col in asientos_ocupados:
         matriz[fila][col] = "X"
 
+def buscar_usuario_por_nombre(usuarios, nombre_buscado, indice=0):
+    if indice >= len(usuarios):
+        return None 
+
+    if usuarios[indice]['nombre'] == nombre_buscado:
+        return usuarios[indice]  
+
+    return buscar_usuario_por_nombre(usuarios, nombre_buscado, indice + 1)
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/ingresar_datos', methods=['POST'])
-def ingresar_datos():
-    nombre = request.form['nombre']
-    edad = request.form['edad']
-    if not nombre or not edad:
-        flash('Por favor, complete todos los campos.')
-        return redirect(url_for('index'))
+class ExcepcionDatosUsuario(Exception):
+    def __init__(self, mensaje):
+        self.mensaje = mensaje
+        super().__init__(self.mensaje)
+
+@app.route('/iniciar_sesion', methods=['GET', 'POST'])
+def iniciar_sesion():
+    if request.method == 'POST':
+        try:
+            # Obtener los datos del formulario
+            nombre = request.form.get('nombre')
+            contraseña = request.form.get('contraseña')
+
+            # Validación básica de los campos
+            if not nombre or not contraseña:
+                raise ExcepcionDatosUsuario('Todos los campos son requeridos.')
+
+            # Cargar los usuarios existentes
+            usuarios = cargar_usuarios()
+
+            # Buscar el usuario con el nombre proporcionado
+            usuario_encontrado = buscar_usuario_por_nombre(usuarios, nombre)
+            
+            # Verificar si el usuario fue encontrado y si la contraseña es correcta
+            if not usuario_encontrado or usuario_encontrado['contraseña'] != contraseña:
+                raise ExcepcionDatosUsuario('Usuario o contraseña incorrectos.')
+
+            # Si todo está bien, guardar los datos del usuario en la sesión
+            session['nombre'] = usuario_encontrado['nombre']
+            session['edad'] = usuario_encontrado['edad']
+            session['mail'] = usuario_encontrado['mail']
+
+            # Redirigir a la página de selección de fecha
+            return redirect(url_for('seleccionar_fecha'))
+
+        except ExcepcionDatosUsuario as e:
+            flash(str(e))
+            return redirect(url_for('iniciar_sesion'))
     
-    return redirect(url_for('seleccionar_fecha', nombre=nombre, edad=edad))
+    return render_template('iniciar_sesion.html')
 
-@app.route('/seleccionar_fecha')
+# Función para cargar los usuarios desde el archivo JSON
+def cargar_usuarios():
+    try:
+        with open('usuarios.json', 'r') as archivo:
+            return json.load(archivo)
+    except FileNotFoundError:
+        return []
+
+# Función para guardar los usuarios en el archivo JSON
+def guardar_usuarios(usuarios):
+    with open('usuarios.json', 'w') as archivo:
+        json.dump(usuarios, archivo, indent=4)
+
+# Función para verificar la contraseña
+def verificar_contraseña(usuario, contraseña):
+    return check_password_hash(usuario['contraseña'], contraseña)
+
+@app.route('/crear_usuario', methods=['GET', 'POST'])
+
+
+
+def crear_usuario():
+    def es_nombre_valido(nombre):
+        patron=r'^[a-zA-Z\s]+$'
+        return re.match(patron,nombre)
+        
+    def es_correo_valido(mail):
+        patron = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'  # Expresión regular para correo
+        return re.match(patron, mail)
+
+
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        edad = request.form['edad']
+        contraseña = request.form['contraseña']
+        mail = request.form['mail']
+        
+        usuarios = cargar_usuarios()
+
+        #validar nombre
+        if not es_nombre_valido(nombre):
+            flash('El nombre solo puede contener letras y espacios.')
+            return redirect(url_for('crear_usuario'))
+        
+        #validar mail
+        if not es_correo_valido(mail):
+            flash('El correo electrónico no es válido.')
+            return redirect(url_for('crear_usuario'))
+
+        for usuario in usuarios:
+            if usuario['mail'] == mail:
+                flash('Usuario existente')
+                return redirect(url_for('crear_usuario'))
+        
+        for usuario in usuarios:
+            if usuario['contraseña'] == contraseña:
+                flash ('Contraseña existente')
+                return redirect(url_for('crear_usuario'))
+        
+        nuevo_usuario = {
+            'nombre': nombre,
+            'edad': edad,
+            'contraseña': contraseña,
+            'mail': mail
+        }
+        usuarios.append(nuevo_usuario)
+
+        guardar_usuarios(usuarios)
+
+        return redirect(url_for('iniciar_sesion'))
+
+    return render_template('crear_usuario.html')
+
+@app.route('/seleccionar_fecha', methods=['GET', 'POST'])
 def seleccionar_fecha():
-    nombre = request.args.get('nombre')
-    edad = request.args.get('edad')
-    return render_template('seleccionar_fecha.html', nombre=nombre, edad=edad)
+    # Verificar si el usuario ha iniciado sesión
+    if 'nombre' not in session:
+        flash('Por favor, inicie sesión primero.', 'error')
+        return redirect(url_for('iniciar_sesion'))
 
-@app.route('/confirmar_fecha', methods=['POST'])
-def confirmar_fecha():
-    fecha_str = request.form['fecha']
-    nombre = request.form['nombre']
-    edad = request.form['edad']
-    fecha_seleccionada = datetime.strptime(fecha_str, "%Y-%m-%d").date()
-    return redirect(url_for('seleccionar_horario', nombre=nombre, edad=edad, fecha=fecha_seleccionada))
+    # Obtener los datos del usuario desde la sesión
+    nombre = session['nombre']
+    edad = session['edad']
+    mail = session['mail']
+
+    if request.method == 'POST':
+        fecha = request.form['fecha']
+        print(f"Fecha seleccionada: {fecha}")
+
+        # Verifica que la fecha haya sido seleccionada
+        if not fecha:
+            flash('Debe seleccionar una fecha.', 'error')
+            return redirect(url_for('seleccionar_fecha'))
+
+        # Redirigir a la página de selección de horario con la fecha seleccionada
+        return redirect(url_for('seleccionar_horario', fecha=fecha))
+
+    return render_template('seleccionar_fecha.html', nombre=nombre, edad=edad, mail=mail)
 
 @app.route('/seleccionar_horario')
 def seleccionar_horario():
@@ -61,40 +196,74 @@ def seleccionar_horario():
     fecha = request.args.get('fecha')
     return render_template('seleccionar_horario.html', nombre=nombre, edad=edad, fecha=fecha)
 
-@app.route('/seleccionar_pelicula', methods=['POST'])
+# Variables globales
+peliculas_adultos = ["Venom El Ultimo Baile", "Terrifier 3 El Payaso Siniestro", "Sonrie 2"]
+peliculas_todo_publico = ["Robot Salvaje", "La Leyenda Del Dragon"]
+asientos_ocupados = 30                       
+PRECIO_ENTRADA = 8000
+
+# Lista de películas con sus imágenes correspondientes
+peliculas_con_imagenes = [
+    {'nombre': 'Venom El Ultimo Baile', 'imagen': 'static/img/venom.jpg'},
+    {'nombre': 'Terrifier 3 El Payaso Siniestro', 'imagen': 'static/img/terrifier-3.jpg'},
+    {'nombre': 'Sonrie 2', 'imagen': 'static/img/sonrie2.jpg'},
+    {'nombre': 'Robot Salvaje', 'imagen': 'static/img/robot-salvaje.jpg'},
+    {'nombre': 'La Leyenda Del Dragon', 'imagen': 'static/img/la-leyenda-del-dragon.jpg'}
+]
+
+@app.route('/seleccionar_pelicula', methods=['GET', 'POST'])
 def seleccionar_pelicula():
-    nombre = request.form['nombre']
-    edad = int(request.form['edad'])
-    fecha = request.form['fecha']
-    peliculas = peliculas_adultos + peliculas_todo_publico if edad >= 18 else peliculas_todo_publico
-    return render_template('seleccionar_pelicula.html', nombre=nombre, edad=edad, fecha=fecha, peliculas=peliculas)
+    if 'nombre' not in session:
+        flash('Por favor, inicie sesión primero.', 'error')
+        return redirect(url_for('iniciar_sesion'))
+
+    nombre = session['nombre']
+    edad_str = session['edad']
+    fecha = request.args.get('fecha')
+
+    if request.method == 'POST':
+        nombre = session['nombre']
+        edad_str = session['edad']
+        fecha = request.form.get('fecha')
+
+    if not nombre or not edad_str or not fecha:
+        flash("Faltan datos necesarios para seleccionar la película.")
+        return redirect(url_for('index'))
+
+    try:
+        edad = int(edad_str)
+    except ValueError:
+        flash("La edad debe ser un número válido.")
+        return redirect(url_for('index'))
+
+    peliculas_adultos = peliculas_con_imagenes[:5] 
+    peliculas_todo_publico = peliculas_con_imagenes[3:] 
+
+    peliculas_seleccionadas = peliculas_adultos if edad >= 18 else peliculas_todo_publico
+
+    return render_template('seleccionar_pelicula.html', nombre=nombre, edad=edad, fecha=fecha,peliculas=peliculas_seleccionadas)
 
 @app.route('/confirmar_pelicula', methods=['POST'])
 def confirmar_pelicula():
-    nombre = request.form['nombre']
-    edad = request.form['edad']
+    nombre = session['nombre']
+    edad = session['edad']
     fecha = request.form['fecha']
     pelicula_seleccionada = request.form['pelicula']
     return redirect(url_for('seleccionar_asientos', nombre=nombre, edad=edad, fecha=fecha, pelicula=pelicula_seleccionada))
 
 @app.route('/seleccionar_asientos', methods=['GET', 'POST'])
 def seleccionar_asientos():
-    nombre = request.args.get('nombre')
-    edad = request.args.get('edad')
+    nombre = session['nombre']
+    edad = session['edad']
     fecha = request.args.get('fecha')
     pelicula = request.args.get('pelicula')
 
-    # Inicializar asientos
     filas, columnas = 16, 14
     matriz = inicializar_asientos(filas, columnas)
     ocupar_asientos_aleatoriamente(matriz, asientos_ocupados)
 
     if request.method == 'POST':
-        # Procesar asientos seleccionados
-        asientos_seleccionados = request.form.getlist('asientos')  # Recibir lista de asientos seleccionados
-        # Aquí podrías hacer algo con los asientos seleccionados, como validarlos o almacenarlos
-
-        # Por ejemplo, si quieres guardarlos en la sesión o pasarlos a la siguiente etapa
+        asientos_seleccionados = request.form.getlist('asientos')
         return redirect(url_for('realizar_pago', 
                                 nombre=nombre, 
                                 edad=edad, 
@@ -102,50 +271,32 @@ def seleccionar_asientos():
                                 pelicula=pelicula, 
                                 asientos_seleccionados=",".join(asientos_seleccionados)))
 
-    return render_template('seleccionar_asientos.html', nombre=nombre, edad=edad, fecha=fecha, pelicula=pelicula, matriz=matriz)
+    return render_template('seleccionar_asientos.html', nombre=nombre, edad=edad, fecha=fecha,pelicula=pelicula, matriz=matriz)
 
 @app.route('/realizar_pago', methods=['POST'])
 def realizar_pago():
-    # Recoger datos del formulario
-    nombre = request.form['nombre']
-    edad = request.form['edad']
+    nombre = session['nombre']
+    edad = session['edad']
     fecha = request.form['fecha']
     pelicula = request.form['pelicula']
     cantidad_entradas = int(request.form['cantidad_entradas'])
 
-    # Obtener y procesar asientos seleccionados
     asientos_seleccionados = request.form.get('asientos_seleccionados', '')
     asientos_lista = asientos_seleccionados.split(',') if asientos_seleccionados else []
 
-    # Validar cantidad de asientos seleccionados
-    if len(asientos_lista) != cantidad_entradas:
-        flash(f"Debes seleccionar exactamente {cantidad_entradas} asientos.")
-        return redirect(
-            url_for(
-                'seleccionar_asientos',
-                nombre=nombre,
-                edad=edad,
-                fecha=fecha,
-                pelicula=pelicula,
-                cantidad_entradas=cantidad_entradas
-            )
-        ) 
+    try:
+        if len(asientos_lista) != cantidad_entradas:
+            raise ValueError(f"Debes seleccionar exactamente {cantidad_entradas} asientos. Actualmente seleccionaste {len(asientos_lista)}.")
+    except ValueError as e:
+        flash(f"Error: {str(e)}")
+        return redirect(url_for('seleccionar_asientos', nombre=nombre, edad=edad, fecha=fecha, pelicula=pelicula, cantidad_entradas=cantidad_entradas))
 
-    # Calcular el total a pagar
     total = cantidad_entradas * PRECIO_ENTRADA
 
-    # Renderizar la página de pago
-    return render_template(
-        'realizar_pago.html',
-        nombre=nombre,
-        edad=edad,
-        fecha=fecha,
-        pelicula=pelicula,
-        cantidad_entradas=cantidad_entradas,
-        total=total,
-        asientos=asientos_lista
-    )
+    return render_template('realizar_pago.html', nombre=nombre, edad=edad, fecha=fecha, pelicula=pelicula, 
+                           cantidad_entradas=cantidad_entradas, total=total, asientos_lista=asientos_lista)
 
+# Método para confirmar el pago
 @app.route('/confirmar_pago', methods=['POST'])
 def confirmar_pago():
     # Verificar qué datos llegan
@@ -158,7 +309,7 @@ def confirmar_pago():
         fecha = request.form['fecha']
         cantidad_entradas = request.form['cantidad_entradas']
         total = request.form['total']
-        metodo_pago = request.form['tipo_pago']
+        # metodo_pago = request.form['tipo_pago']  # Si es necesario añadir el método de pago
     except KeyError as e:
         flash(f"Error al procesar el formulario: {str(e)}")
         return redirect(url_for('realizar_pago'))  # Redirigir si hay un error
@@ -172,7 +323,7 @@ def confirmar_pago():
                             cantidad_entradas=cantidad_entradas, 
                             total=total))
 
-
+# Ruta para mostrar los datos y permitir la impresión de la entrada
 @app.route('/imprimir_entrada')
 def imprimir_entrada():
     # Obtener los parámetros de la URL
@@ -184,7 +335,7 @@ def imprimir_entrada():
     total = request.args.get('total')
 
     # Asegúrate de que los valores estén disponibles
-    if not all([nombre, edad, pelicula, fecha, cantidad_entradas, total]):
+    if not all([nombre, edad, pelicula, fecha,cantidad_entradas, total]):
         return "Error: Datos incompletos", 400  # Puedes mostrar un mensaje de error si falta algún parámetro.
 
     # Renderizar la plantilla de impresión de entrada
@@ -196,7 +347,8 @@ def imprimir_entrada():
                            cantidad_entradas=cantidad_entradas,
                            total=total)
 
-def generate_pdf(nombre, edad, pelicula, fecha, cantidad_entradas, total):
+# Función para generar el PDF
+def generate_pdf(nombre, edad, pelicula, fecha,cantidad_entradas, total):
     pdf = FPDF()
     pdf.add_page()
 
@@ -217,6 +369,7 @@ def generate_pdf(nombre, edad, pelicula, fecha, cantidad_entradas, total):
 
     return output_path
 
+# Ruta para descargar el PDF
 @app.route('/descargar_pdf', methods=['POST'])
 def descargar_pdf():
     nombre = request.form['nombre']
@@ -231,7 +384,6 @@ def descargar_pdf():
 
     # Enviar el archivo PDF generado al usuario para que lo descargue
     return send_file(pdf_file, as_attachment=True, download_name="entrada.pdf")
-
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Imprimir Entrada</title>
-    <link rel="stylesheet" href="static/style.css">
+    <link rel="stylesheet" href="static/entrada.css">
 </head>
 <body>
     <div class="container">
@@ -24,6 +24,7 @@
             <input type="hidden" name="edad" value="{{ edad }}">
             <input type="hidden" name="pelicula" value="{{ pelicula }}">
             <input type="hidden" name="fecha" value="{{ fecha }}">
+            <input type="hidden" name="horario" value="{{horario}}">
             <input type="hidden" name="cantidad_entradas" value="{{ cantidad_entradas }}">
             <input type="hidden" name="total" value="{{ total }}">
             <button type="submit">Descargar Entrada en PDF</button>
