@@ -7,7 +7,6 @@ from flask import send_file
 from fpdf import FPDF
 import os
 import re
-import pytest
 
 # ESTO ES PARA INSTALAR LAS LIBRERIAS PARA CORRER EL PROGRAMA!!!!
 # pip install Flask
