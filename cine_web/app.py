@@ -294,7 +294,6 @@ def confirmar_pago():
         fecha = request.form['fecha']
         cantidad_entradas = request.form['cantidad_entradas']
         total = request.form['total']
-        # metodo_pago = request.form['tipo_pago']  # Si es necesario añadir el método de pago
     except KeyError as e:
         flash(f"Error al procesar el formulario: {str(e)}")
         return redirect(url_for('realizar_pago'))  # Redirigir si hay un error
@@ -321,7 +320,7 @@ def imprimir_entrada():
 
     # Asegúrate de que los valores estén disponibles
     if not all([nombre, edad, pelicula, fecha,cantidad_entradas, total]):
-        return "Error: Datos incompletos", 400  # Puedes mostrar un mensaje de error si falta algún parámetro.
+        return "Error: Datos incompletos", 400 
 
     # Renderizar la plantilla de impresión de entrada
     return render_template('imprimir_entrada.html',
