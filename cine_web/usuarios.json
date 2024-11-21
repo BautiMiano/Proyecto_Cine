@@ -103,8 +103,14 @@
     },
     {
         "nombre": "Bautista",
-        "edad": "11",
+        "edad": "18",
         "contrase\u00f1a": "1111",
         "mail": "bautistamiano@gmail.com"
+    },
+    {
+        "nombre": "quimey ",
+        "edad": "49",
+        "contrase\u00f1a": "12345",
+        "mail": "klfjladkjfalk@gmail.com"
     }
 ]

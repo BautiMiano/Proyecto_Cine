@@ -144,6 +144,11 @@ def crear_usuario():
                 flash('Usuario existente')
                 return redirect(url_for('crear_usuario'))
         
+        for usuario in usuarios:
+            if usuario['contraseña'] == contraseña:
+                flash ('Contraseña existente')
+                return redirect(url_for('crear_usuario'))
+        
         nuevo_usuario = {
             'nombre': nombre,
             'edad': edad,
@@ -186,12 +191,8 @@ def seleccionar_fecha():
 
 @app.route('/seleccionar_horario')
 def seleccionar_horario():
-    if 'nombre' not in session:
-        flash('Por favor, inicie sesión primero.', 'error')
-        return redirect(url_for('iniciar_sesion'))
-
-    nombre = session['nombre']
-    edad = session['edad']
+    nombre = request.args.get('nombre')
+    edad = request.args.get('edad')
     fecha = request.args.get('fecha')
     return render_template('seleccionar_horario.html', nombre=nombre, edad=edad, fecha=fecha)
 
@@ -240,7 +241,7 @@ def seleccionar_pelicula():
 
     peliculas_seleccionadas = peliculas_adultos if edad >= 18 else peliculas_todo_publico
 
-    return render_template('seleccionar_pelicula.html', nombre=nombre, edad=edad, fecha=fecha, peliculas=peliculas_seleccionadas)
+    return render_template('seleccionar_pelicula.html', nombre=nombre, edad=edad, fecha=fecha,peliculas=peliculas_seleccionadas)
 
 @app.route('/confirmar_pelicula', methods=['POST'])
 def confirmar_pelicula():
@@ -270,7 +271,7 @@ def seleccionar_asientos():
                                 pelicula=pelicula, 
                                 asientos_seleccionados=",".join(asientos_seleccionados)))
 
-    return render_template('seleccionar_asientos.html', nombre=nombre, edad=edad, fecha=fecha, pelicula=pelicula, matriz=matriz)
+    return render_template('seleccionar_asientos.html', nombre=nombre, edad=edad, fecha=fecha,pelicula=pelicula, matriz=matriz)
 
 @app.route('/realizar_pago', methods=['POST'])
 def realizar_pago():
@@ -334,7 +335,7 @@ def imprimir_entrada():
     total = request.args.get('total')
 
     # Asegúrate de que los valores estén disponibles
-    if not all([nombre, edad, pelicula, fecha, cantidad_entradas, total]):
+    if not all([nombre, edad, pelicula, fecha,cantidad_entradas, total]):
         return "Error: Datos incompletos", 400  # Puedes mostrar un mensaje de error si falta algún parámetro.
 
     # Renderizar la plantilla de impresión de entrada
@@ -347,7 +348,7 @@ def imprimir_entrada():
                            total=total)
 
 # Función para generar el PDF
-def generate_pdf(nombre, edad, pelicula, fecha, cantidad_entradas, total):
+def generate_pdf(nombre, edad, pelicula, fecha,cantidad_entradas, total):
     pdf = FPDF()
     pdf.add_page()
 
