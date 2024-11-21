@@ -112,5 +112,11 @@
         "edad": "49",
         "contrase\u00f1a": "12345",
         "mail": "klfjladkjfalk@gmail.com"
+    },
+    {
+        "nombre": "Hernan",
+        "edad": "56",
+        "contrase\u00f1a": "1234",
+        "mail": "hernan@gmail.com"
     }
 ]

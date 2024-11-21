@@ -137,16 +137,6 @@ def crear_usuario():
         if not es_correo_valido(mail):
             flash('El correo electrónico no es válido.')
             return redirect(url_for('crear_usuario'))
-
-        for usuario in usuarios:
-            if usuario['mail'] == mail:
-                flash('Usuario existente')
-                return redirect(url_for('crear_usuario'))
-        
-        for usuario in usuarios:
-            if usuario['contraseña'] == contraseña:
-                flash ('Contraseña existente')
-                return redirect(url_for('crear_usuario'))
         
         nuevo_usuario = {
             'nombre': nombre,
