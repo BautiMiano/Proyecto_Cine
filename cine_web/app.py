@@ -12,7 +12,7 @@ import re
 # pip install Flask
 # pip install werkzeug
 # pip install fpdf
-# pip install Flask werkzeug fpdf
+# pip install Flask werkzeug fpdf 
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
