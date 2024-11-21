@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -114,6 +115,17 @@
             margin-bottom: 8px;
         }
 
+        /* Estilo para los mensajes de error */
+        .error-message {
+            background-color: #b51706;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+            width: 80%;
+        }
+
         /* Botón de confirmación */
         button[type="submit"] {
             background-color: #bc0808;
@@ -136,12 +148,24 @@
 </head>
 <body>
     <h1>Seleccionar Asientos</h1>
+
+    <!-- Mostrar los mensajes de error -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="error-message">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
     <form id="asientosForm" action="{{ url_for('realizar_pago') }}" method="POST">
         <input type="hidden" name="nombre" value="{{ nombre }}">
         <input type="hidden" name="edad" value="{{ edad }}">
         <input type="hidden" name="fecha" value="{{ fecha }}">
         <input type="hidden" name="pelicula" value="{{ pelicula }}">
-        
+
         <!-- Selección de la cantidad de entradas -->
         <div class="cantidad-entradas">
             <label for="cantidad_entradas">Cantidad de Entradas:</label>
