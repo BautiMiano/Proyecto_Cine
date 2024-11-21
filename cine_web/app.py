@@ -9,6 +9,12 @@ import os
 import re
 import pytest
 
+# ESTO ES PARA INSTALAR LAS LIBRERIAS PARA CORRER EL PROGRAMA!!!!
+# pip install Flask
+# pip install werkzeug
+# pip install fpdf
+# pip install Flask werkzeug fpdf
+
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
@@ -132,13 +138,6 @@ def crear_usuario():
         if not es_correo_valido(mail):
             flash('El correo electrónico no es válido.')
             return redirect(url_for('crear_usuario'))
-
-
-        # Verificar si el usuario ya existe
-        for usuario in usuarios:
-            if usuario['nombre'] == nombre:
-                flash('El nombre ya está registrado.')
-                return redirect(url_for('crear_usuario'))
 
         for usuario in usuarios:
             if usuario['mail'] == mail:
