@@ -108,8 +108,6 @@ def verificar_contraseña(usuario, contraseña):
 
 @app.route('/crear_usuario', methods=['GET', 'POST'])
 
-
-
 def crear_usuario():
     def es_nombre_valido(nombre):
         patron=r'^[a-zA-Z\s]+$'
@@ -118,7 +116,6 @@ def crear_usuario():
     def es_correo_valido(mail):
         patron = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'  # Expresión regular para correo
         return re.match(patron, mail)
-
 
     if request.method == 'POST':
         nombre = request.form['nombre']
@@ -189,12 +186,6 @@ def seleccionar_horario():
     edad = request.args.get('edad')
     fecha = request.args.get('fecha')
     return render_template('seleccionar_horario.html', nombre=nombre, edad=edad, fecha=fecha)
-
-# Variables globales
-peliculas_adultos = ["Venom El Ultimo Baile", "Terrifier 3 El Payaso Siniestro", "Sonrie 2"]
-peliculas_todo_publico = ["Robot Salvaje", "La Leyenda Del Dragon"]
-asientos_ocupados = 30                       
-PRECIO_ENTRADA = 8000
 
 # Lista de películas con sus imágenes correspondientes
 peliculas_con_imagenes = [
